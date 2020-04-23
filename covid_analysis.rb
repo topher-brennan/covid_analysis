@@ -4,6 +4,14 @@ GLOBAL_DEATHS = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/maste
 GLOBAL_CONFIRMED = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 UNITED_STATES = "US"
 ITALY = "Italy"
+BIG_FIVE = [
+  "France",
+  "Germany",
+  "Italy",
+  "Spain",
+  "United Kingdom"
+]
+COUNTRY = "Country"
 DATE_REGEX = /\d\d?\/\d\d?\/\d\d/
 
 # Stolen from https://stackoverflow.com/a/57397583
@@ -26,6 +34,22 @@ end
 
 def parse_csv_from_uri(uri)
   open(uri).read.split(/\n/).map { |row| row.split(",") }
+end
+
+def summed_rows_for_countries(rows, countries)
+  first_day = rows.first.index { |cell| cell.match?(DATE_REGEX) }
+  country_column = rows.first.index { |cell| cell.match?(COUNTRY) }
+  selected_rows = rows.select { |row| countries.include?(row[country_column]) }
+
+  totals = Array.new(selected_rows.first.drop(first_day).size) { 0 }
+
+  selected_rows.each do |row|
+    row.drop(first_day).each_with_index do |cell, i|
+      totals[i] += cell.to_i 
+    end
+  end
+
+  totals
 end
 
 def weekly_growth(rows, country)
@@ -72,18 +96,24 @@ def weekly_change_in_growth(rows, country)
 end
 
 if __FILE__ == $PROGRAM_NAME
-  rows = parse_csv_from_uri(GLOBAL_DEATHS)
+  rows = parse_csv_from_uri(GLOBAL_CONFIRMED)
+
+  # results = {
+  #   growth: {
+  #     italy: weekly_growth(rows, ITALY),
+  #     united_states: weekly_growth(rows, UNITED_STATES)
+  #   },
+  #   change_in_growth: {
+  #     italy: weekly_change_in_growth(rows, ITALY),
+  #     united_states: weekly_change_in_growth(rows, UNITED_STATES)
+  #   }
+  # }
 
   results = {
-    growth: {
-      italy: weekly_growth(rows, ITALY),
-      united_states: weekly_growth(rows, UNITED_STATES)
-    },
-    change_in_growth: {
-      italy: weekly_change_in_growth(rows, ITALY),
-      united_states: weekly_change_in_growth(rows, UNITED_STATES)
-    }
+    big_five: summed_rows_for_countries(rows, BIG_FIVE),
+    united_states: summed_rows_for_countries(rows, [UNITED_STATES])
   }
+
   print pretty_hash(results)
   print "\n"
 end
