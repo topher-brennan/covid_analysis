@@ -4,6 +4,7 @@ GLOBAL_DEATHS = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/maste
 GLOBAL_CONFIRMED = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 UNITED_STATES = "US"
 ITALY = "Italy"
+# The following five countries have about 98% of the US population.
 BIG_FIVE = [
   "France",
   "Germany",
@@ -11,6 +12,36 @@ BIG_FIVE = [
   "Spain",
   "United Kingdom"
 ]
+EUROPEAN_UNION = [
+  "Austria",
+  "Belgium",
+  "Bulgaria",
+  "Croatia",
+  "Cyprus",
+  "Chzechia",
+  "Denmark",
+  "Estonia",
+  "Finland",
+  "France",
+  "Germany",
+  "Greece",
+  "Hungary",
+  "Ireland",
+  "Italy",
+  "Latvia",
+  "Lithuania",
+  "Luxembourg",
+  "Malta",
+  "Netherlands",
+  "Poland",
+  "Romania",
+  "Slovakia",
+  "Slovenia",
+  "Spain",
+  "Sweeden",
+]
+EU_POPULATION = 445_000_000
+US_POPULATION = 331_000_000
 COUNTRY = "Country"
 DATE_REGEX = /\d\d?\/\d\d?\/\d\d/
 
@@ -50,6 +81,10 @@ def summed_rows_for_countries(rows, countries)
   end
 
   totals
+end
+
+def per_million(rows, countries, population)
+  summed_rows_for_countries(rows, countries).map { |total| total * 1_000_000 / population }
 end
 
 def weekly_growth(rows, country)
@@ -96,22 +131,18 @@ def weekly_change_in_growth(rows, country)
 end
 
 if __FILE__ == $PROGRAM_NAME
-  rows = parse_csv_from_uri(GLOBAL_CONFIRMED)
-
-  # results = {
-  #   growth: {
-  #     italy: weekly_growth(rows, ITALY),
-  #     united_states: weekly_growth(rows, UNITED_STATES)
-  #   },
-  #   change_in_growth: {
-  #     italy: weekly_change_in_growth(rows, ITALY),
-  #     united_states: weekly_change_in_growth(rows, UNITED_STATES)
-  #   }
-  # }
+  death_rows = parse_csv_from_uri(GLOBAL_DEATHS)
+  confirmed_rows = parse_csv_from_uri(GLOBAL_CONFIRMED)
 
   results = {
-    big_five: summed_rows_for_countries(rows, BIG_FIVE),
-    united_states: summed_rows_for_countries(rows, [UNITED_STATES])
+    deaths: {
+      european_union: per_million(death_rows, EUROPEAN_UNION, EU_POPULATION),
+      united_states: per_million(death_rows, [UNITED_STATES], US_POPULATION)
+    },
+    confirmed: {
+      european_union: per_million(confirmed_rows, EUROPEAN_UNION, EU_POPULATION),
+      united_states: per_million(confirmed_rows, [UNITED_STATES], US_POPULATION)
+    }
   }
 
   print pretty_hash(results)
