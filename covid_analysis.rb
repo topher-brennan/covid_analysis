@@ -18,7 +18,7 @@ EUROPEAN_UNION = [
   "Bulgaria",
   "Croatia",
   "Cyprus",
-  "Chzechia",
+  "Czechia",
   "Denmark",
   "Estonia",
   "Finland",
@@ -38,7 +38,7 @@ EUROPEAN_UNION = [
   "Slovakia",
   "Slovenia",
   "Spain",
-  "Sweeden",
+  "Sweden",
 ]
 EU_POPULATION = 445_000_000
 US_POPULATION = 331_000_000
