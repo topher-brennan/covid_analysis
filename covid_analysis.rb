@@ -59,12 +59,29 @@ RICH_EUROPE = [
   "Iceland",
   "Luxembourg"
 ]
+SCANDANAVIA = [
+  "Denmark",
+  "Norway",
+  "Sweden"
+]
 BIG_5_POPULATION = 324_000_000
 EU_POPULATION = 445_000_000
 US_POPULATION = 331_000_000
 RICH_EUROPE_POPULATION = 403_000_000
+SCANDANAVIA_POPULATION = 21_400_000
 COUNTRY = "Country"
 DATE_REGEX = /\d\d?\/\d\d?\/\d\d/
+
+# Version compatability hack
+class String
+  def method_missing(m, *args, &block)
+    if m == :match?
+      match(*args)
+    else
+      super
+    end
+  end
+end
 
 # Stolen from https://stackoverflow.com/a/57397583
 # Use over other solutions because I don't want to put every array element on a separate line
@@ -163,12 +180,14 @@ if __FILE__ == $PROGRAM_NAME
       big_five: per_million(death_rows, BIG_FIVE, BIG_5_POPULATION),
       european_union: per_million(death_rows, EUROPEAN_UNION, EU_POPULATION),
       rich_europe: per_million(death_rows, RICH_EUROPE, RICH_EUROPE_POPULATION),
+      scandanavia: per_million(death_rows, SCANDANAVIA, SCANDANAVIA_POPULATION),
       united_states: per_million(death_rows, [UNITED_STATES], US_POPULATION),
     },
     confirmed: {
       big_five: per_million(confirmed_rows, BIG_FIVE, BIG_5_POPULATION),
       european_union: per_million(confirmed_rows, EUROPEAN_UNION, EU_POPULATION),
       rich_europe: per_million(confirmed_rows, RICH_EUROPE, RICH_EUROPE_POPULATION),
+      scandanavia: per_million(confirmed_rows, SCANDANAVIA, SCANDANAVIA_POPULATION),
       united_states: per_million(confirmed_rows, [UNITED_STATES], US_POPULATION),
     }
   }
