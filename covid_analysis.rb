@@ -40,8 +40,29 @@ EUROPEAN_UNION = [
   "Spain",
   "Sweden",
 ]
+# Per capita GDP of at least $34,000 in 2019
+RICH_EUROPE = [
+  "Spain",
+  "Italy",
+  "United Kingdom",
+  "France",
+  "Belgium",
+  "Germany",
+  "Finland",
+  "Austria",
+  "Netherlands",
+  "Sweden",
+  "Denmark",
+  "Ireland",
+  "Norway",
+  "Switzerland",
+  "Iceland",
+  "Luxembourg"
+]
+BIG_5_POPULATION = 324_000_000
 EU_POPULATION = 445_000_000
 US_POPULATION = 331_000_000
+RICH_EUROPE_POPULATION = 403_000_000
 COUNTRY = "Country"
 DATE_REGEX = /\d\d?\/\d\d?\/\d\d/
 
@@ -84,7 +105,10 @@ def summed_rows_for_countries(rows, countries)
 end
 
 def per_million(rows, countries, population)
-  summed_rows_for_countries(rows, countries).map { |total| total * 1_000_000 / population }
+  rows = summed_rows_for_countries(rows, countries).map { |total| total * 1_000_000 / population }
+  latest = rows[-1]
+  increase_for_week = latest - rows[-8]
+  "#{latest} (+#{increase_for_week})"
 end
 
 def weekly_growth(rows, country)
@@ -136,12 +160,16 @@ if __FILE__ == $PROGRAM_NAME
 
   results = {
     deaths: {
+      big_five: per_million(death_rows, BIG_FIVE, BIG_5_POPULATION),
       european_union: per_million(death_rows, EUROPEAN_UNION, EU_POPULATION),
-      united_states: per_million(death_rows, [UNITED_STATES], US_POPULATION)
+      rich_europe: per_million(death_rows, RICH_EUROPE, RICH_EUROPE_POPULATION),
+      united_states: per_million(death_rows, [UNITED_STATES], US_POPULATION),
     },
     confirmed: {
+      big_five: per_million(confirmed_rows, BIG_FIVE, BIG_5_POPULATION),
       european_union: per_million(confirmed_rows, EUROPEAN_UNION, EU_POPULATION),
-      united_states: per_million(confirmed_rows, [UNITED_STATES], US_POPULATION)
+      rich_europe: per_million(confirmed_rows, RICH_EUROPE, RICH_EUROPE_POPULATION),
+      united_states: per_million(confirmed_rows, [UNITED_STATES], US_POPULATION),
     }
   }
 
