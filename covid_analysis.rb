@@ -1,7 +1,10 @@
+require "csv"
 require "open-uri"
 
 GLOBAL_DEATHS = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 GLOBAL_CONFIRMED = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+POPULATION_DATA = "WPP2019_TotalPopulationBySex.csv"
+TOP_N = 12
 UNITED_STATES = "US"
 ITALY = "Italy"
 # The following five countries have about 98% of the US population.
@@ -107,8 +110,8 @@ end
 
 def summed_rows_for_countries(rows, countries)
   first_day = rows.first.index { |cell| cell.match?(DATE_REGEX) }
-  country_column = rows.first.index { |cell| cell.match?(COUNTRY) }
-  selected_rows = rows.select { |row| countries.include?(row[country_column]) }
+	cc = country_column(rows)
+  selected_rows = rows.select { |row| countries.include?(row[cc]) }
 
   totals = Array.new(selected_rows.first.drop(first_day).size) { 0 }
 
@@ -121,11 +124,22 @@ def summed_rows_for_countries(rows, countries)
   totals
 end
 
+def country_column(rows)
+  rows.first.index { |cell| cell.match?(COUNTRY) }
+end
+
 def per_million(rows, countries, population)
   rows = summed_rows_for_countries(rows, countries).map { |total| total * 1_000_000 / population }
   latest = rows[-1]
-  increase_for_week = latest - rows[-8]
-  "#{latest} (+#{increase_for_week})"
+	one_week_ago = rows[-8]
+	two_weeks_ago = rows[-15]
+
+  increase_for_week = latest - one_week_ago
+	increase_last_week = one_week_ago - two_weeks_ago
+
+	acceleration = increase_for_week - increase_last_week
+
+  "#{latest} (+#{increase_for_week}) [#{acceleration > 0 ? '+' : ''}#{acceleration}]"
 end
 
 def weekly_growth(rows, country)
@@ -171,6 +185,29 @@ def weekly_change_in_growth(rows, country)
   results
 end
 
+def find_top_countries(rows)
+  cc = country_column(rows)
+	totals = Hash.new(0)
+	rows.drop(1).each do |row|
+	  totals[row[cc]] += row[-1].to_i
+  end
+
+	population_data = CSV.read(POPULATION_DATA).filter do |row|
+	  row[4] == '2020'
+	end.map do |row|
+	  country = row[1]
+		country = 'US' if country == 'United States of America'
+	  [country, row[-2].to_f] 
+  end.to_h
+
+	per_capita = totals.filter do |key, value|
+	  population_data[key]
+	end.map do |key, value|
+		[key, (value / population_data[key] * 1000).round]
+	end
+	per_capita.sort_by { |entry| entry.last * -1 }.take(TOP_N)
+end
+
 if __FILE__ == $PROGRAM_NAME
   death_rows = parse_csv_from_uri(GLOBAL_DEATHS)
   confirmed_rows = parse_csv_from_uri(GLOBAL_CONFIRMED)
@@ -180,18 +217,19 @@ if __FILE__ == $PROGRAM_NAME
       big_five: per_million(death_rows, BIG_FIVE, BIG_5_POPULATION),
       european_union: per_million(death_rows, EUROPEAN_UNION, EU_POPULATION),
       rich_europe: per_million(death_rows, RICH_EUROPE, RICH_EUROPE_POPULATION),
-      scandanavia: per_million(death_rows, SCANDANAVIA, SCANDANAVIA_POPULATION),
+      # scandanavia: per_million(death_rows, SCANDANAVIA, SCANDANAVIA_POPULATION),
       united_states: per_million(death_rows, [UNITED_STATES], US_POPULATION),
     },
     confirmed: {
       big_five: per_million(confirmed_rows, BIG_FIVE, BIG_5_POPULATION),
       european_union: per_million(confirmed_rows, EUROPEAN_UNION, EU_POPULATION),
       rich_europe: per_million(confirmed_rows, RICH_EUROPE, RICH_EUROPE_POPULATION),
-      scandanavia: per_million(confirmed_rows, SCANDANAVIA, SCANDANAVIA_POPULATION),
+      # scandanavia: per_million(confirmed_rows, SCANDANAVIA, SCANDANAVIA_POPULATION),
       united_states: per_million(confirmed_rows, [UNITED_STATES], US_POPULATION),
     }
   }
 
   print pretty_hash(results)
   print "\n"
+	puts find_top_countries(death_rows)
 end
