@@ -4,7 +4,7 @@ require "open-uri"
 GLOBAL_DEATHS = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 GLOBAL_CONFIRMED = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 POPULATION_DATA = "WPP2019_TotalPopulationBySex.csv"
-TOP_N = 12
+TOP_N = 10
 UNITED_STATES = "US"
 ITALY = "Italy"
 # The following five countries have about 98% of the US population.
@@ -67,11 +67,19 @@ SCANDANAVIA = [
   "Norway",
   "Sweden"
 ]
+
 BIG_5_POPULATION = 324_000_000
 EU_POPULATION = 445_000_000
-US_POPULATION = 331_000_000
 RICH_EUROPE_POPULATION = 403_000_000
 SCANDANAVIA_POPULATION = 21_400_000
+
+FRANCE_POPULATION = 65_000_000
+IRELAND_POPULATION = 5_000_000
+ITALY_POPULATION = 60_000_000
+SPAIN_POPULATION = 47_000_000
+UNITED_KINGDOM_POPULATION = 68_000_000
+US_POPULATION = 331_000_000
+
 COUNTRY = "Country"
 DATE_REGEX = /\d\d?\/\d\d?\/\d\d/
 
@@ -218,6 +226,11 @@ if __FILE__ == $PROGRAM_NAME
       european_union: per_million(death_rows, EUROPEAN_UNION, EU_POPULATION),
       rich_europe: per_million(death_rows, RICH_EUROPE, RICH_EUROPE_POPULATION),
       # scandanavia: per_million(death_rows, SCANDANAVIA, SCANDANAVIA_POPULATION),
+      # france: per_million(death_rows, ["France"], FRANCE_POPULATION),
+      ireland: per_million(death_rows, ["Ireland"], IRELAND_POPULATION),
+      # italy: per_million(death_rows, ["Italy"], ITALY_POPULATION),
+      # spain: per_million(death_rows, ["Spain"], SPAIN_POPULATION),
+      # united_kingdom: per_million(death_rows, ["United Kingdom"], UNITED_KINGDOM_POPULATION),
       united_states: per_million(death_rows, [UNITED_STATES], US_POPULATION),
     },
     confirmed: {
@@ -225,11 +238,15 @@ if __FILE__ == $PROGRAM_NAME
       european_union: per_million(confirmed_rows, EUROPEAN_UNION, EU_POPULATION),
       rich_europe: per_million(confirmed_rows, RICH_EUROPE, RICH_EUROPE_POPULATION),
       # scandanavia: per_million(confirmed_rows, SCANDANAVIA, SCANDANAVIA_POPULATION),
+      # france: per_million(confirmed_rows, ["France"], FRANCE_POPULATION),
+      ireland: per_million(confirmed_rows, ["Ireland"], IRELAND_POPULATION),
+      # italy: per_million(confirmed_rows, ["Italy"], ITALY_POPULATION),
+      # spain: per_million(confirmed_rows, ["Spain"], SPAIN_POPULATION),
+      # united_kingdom: per_million(confirmed_rows, ["United Kingdom"], UNITED_KINGDOM_POPULATION),
       united_states: per_million(confirmed_rows, [UNITED_STATES], US_POPULATION),
     }
   }
 
   print pretty_hash(results)
   print "\n"
-	puts find_top_countries(death_rows)
 end
