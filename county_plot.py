@@ -20,5 +20,7 @@ for row in cr:
         new_cases = [case_data[i+7] - case_data[i] for i in range(l - 7)]
         plot(case_data)
         plot(new_cases)
-        k=input("press any key to exit")
+        print(f'The seven-day period with the most cases had {max(new_cases)} cases.')
+        print(f'The most recent seven-day period had {new_cases[-1]} cases.')
+        k=input('Press any key to exit.')
 
