@@ -23,20 +23,28 @@ def plot(data):
     fig, ax = plt.subplots()
     ax.plot(x_axis, data)
 
+def fix_reporting_errors_by_interpolation(data):
+    for i in range(len(data) - 2):
+        first, middle, last = data[i], data[i+1], data[i+2]
+        if type(first) == int and type(last) == int and data[i+1] > data[i+2]:
+            data[i+1] = (data[i] + data[i+2]) / 2
+
 first_row = cr.__next__()
 county_index = first_row.index('Admin2')
 state_index = first_row.index('Province_State')
 
 for row in cr:
     if row[county_index] == county and row[state_index] == state:
+        fix_reporting_errors_by_interpolation(row)
         first_case_index = row.index('1')
         case_data = [int(el) for el in row[first_case_index:]]
+        fix_reporting_errors_by_interpolation(case_data)
         l = len(case_data)
-        new_cases = [case_data[i+smoothing] - case_data[i] for i in range(l - smoothing)]
+        new_cases = [round((case_data[i+smoothing] - case_data[i]) / float(smoothing)) for i in range(l - smoothing)]
         plot(case_data)
         plot(new_cases)
         smoothing_str = (num2words(smoothing) if smoothing < 10 else str(smoothing))
-        print(f'The {smoothing_str}-day period with the most cases had {max(new_cases)} cases.')
-        print(f'The most recent {smoothing_str}-day period had {new_cases[-1]} cases.')
+        print(f'The {smoothing_str}-day period with the most cases had {max(new_cases)} cases per day.')
+        print(f'The most recent {smoothing_str}-day period had {new_cases[-1]} cases per day.')
         k=input('Press any key to exit.')
 
